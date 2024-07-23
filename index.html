@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Election Model</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000000;
+            color: #f5f5dc; /* Creamy color */
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a; /* Dark grey for contrast */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        h1, h2 {
+            color: #f5f5dc; /* Creamy color for headings */
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #f5f5dc; /* Creamy color for labels */
+        }
+        input[type="number"], input[type="text"], input[type="color"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #555; /* Light grey border */
+            border-radius: 4px;
+            background-color: #333; /* Dark input background */
+            color: #f5f5dc; /* Creamy text color */
+        }
+        input[type="color"] {
+            padding: 0; /* Remove default padding */
+            height: 36px; /* Ensure height matches other inputs */
+            border: none;
+            cursor: pointer;
+        }
+        .color-display {
+            display: inline-block;
+            width: 36px; /* Same width as color input */
+            height: 36px;
+            border: 1px solid #555; /* Light grey border */
+            border-radius: 4px;
+            background-color: #000; /* Default color */
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50; /* Green button */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049; /* Darker green on hover */
+        }
+        .candidates-list {
+            margin-top: 20px;
+        }
+        .candidate {
+            border: 1px solid #333;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #222; /* Darker background for candidates */
+            border-radius: 4px;
+        }
+        .candidate div {
+            flex: 1;
+        }
+        .candidate button {
+            background-color: #f44336; /* Red for remove button */
+            color: white;
+        }
+        .candidate button:hover {
+            background-color: #d32f2f; /* Darker red on hover */
+        }
+        .results {
+            margin-top: 30px;
+        }
+        .result-bar {
+            height: 30px;
+            margin: 5px 0;
+            color: white;
+            text-align: right;
+            padding-right: 10px;
+            box-sizing: border-box;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Election Model</h1>
+        <div class="form-group">
+            <label for="economicWeight">Economic Weight</label>
+            <input type="number" id="economicWeight" value="1">
+        </div>
+        <div class="form-group">
+            <label for="freedomWeight">Freedom Weight</label>
+            <input type="number" id="freedomWeight" value="1">
+        </div>
+        <div class="form-group">
+            <label for="socialWeight">Social Weight</label>
+            <input type="number" id="socialWeight" value="1">
+        </div>
+        
+        <h2>States Values</h2>
+        <div class="form-group">
+            <label for="stateEconomic">Economic Value</label>
+            <input type="number" id="stateEconomic" min="-100" max="100">
+        </div>
+        <div class="form-group">
+            <label for="stateFreedom">Freedom Value</label>
+            <input type="number" id="stateFreedom" min="-100" max="100">
+        </div>
+        <div class="form-group">
+            <label for="stateSocial">Social Value</label>
+            <input type="number" id="stateSocial" min="-100" max="100">
+        </div>
+        
+        <h2>Add Candidate</h2>
+        <div class="form-group">
+            <label for="candidateName">Name</label>
+            <input type="text" id="candidateName">
+        </div>
+        <div class="form-group">
+            <label for="candidateColor">Color</label>
+            <input type="color" id="candidateColor" onchange="updateColorDisplay()">
+            <div id="colorDisplay" class="color-display"></div>
+        </div>
+        <div class="form-group">
+            <label for="candidateEconomic">Economic Value</label>
+            <input type="number" id="candidateEconomic" min="-100" max="100">
+        </div>
+        <div class="form-group">
+            <label for="candidateFreedom">Freedom Value</label>
+            <input type="number" id="candidateFreedom" min="-100" max="100">
+        </div>
+        <div class="form-group">
+            <label for="candidateSocial">Social Value</label>
+            <input type="number" id="candidateSocial" min="-100" max="100">
+        </div>
+        <div class="form-group">
+            <label for="candidatePopularity">Popularity</label>
+            <input type="number" id="candidatePopularity" min="1" max="100">
+        </div>
+        <div class="form-group">
+            <label for="candidateNameRecognition">Name Recognition</label>
+            <input type="number" id="candidateNameRecognition" min="1" max="100">
+        </div>
+        <div class="form-group">
+            <label for="candidateEffectiveness">Effectiveness</label>
+            <input type="number" id="candidateEffectiveness" min="1" max="100">
+        </div>
+        <button onclick="addCandidate()">Add Candidate</button>
+        
+        <div class="candidates-list" id="candidatesList"></div>
+        
+        <h2>Calculate Election</h2>
+        <button onclick="calculateResults()">Calculate</button>
+        
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        let candidates = [];
+
+        function updateColorDisplay() {
+            const colorInput = document.getElementById('candidateColor');
+            const colorDisplay = document.getElementById('colorDisplay');
+            colorDisplay.style.backgroundColor = colorInput.value;
+        }
+
+        function addCandidate() {
+            const name = document.getElementById('candidateName').value;
+            const color = document.getElementById('candidateColor').value;
+            const economic = parseInt(document.getElementById('candidateEconomic').value);
+            const freedom = parseInt(document.getElementById('candidateFreedom').value);
+            const social = parseInt(document.getElementById('candidateSocial').value);
+            const popularity = parseInt(document.getElementById('candidatePopularity').value);
+            const nameRecognition = parseInt(document.getElementById('candidateNameRecognition').value);
+            const effectiveness = parseInt(document.getElementById('candidateEffectiveness').value);
+
+            candidates.push({ name, color, economic, freedom, social, popularity, nameRecognition, effectiveness });
+            displayCandidates();
+            
+            document.getElementById('candidateName').value = '';
+            document.getElementById('candidateColor').value = '#000000';
+            document.getElementById('colorDisplay').style.backgroundColor = '#000000';
+            document.getElementById('candidateEconomic').value = '';
+            document.getElementById('candidateFreedom').value = '';
+            document.getElementById('candidateSocial').value = '';
+            document.getElementById('candidatePopularity').value = '';
+            document.getElementById('candidateNameRecognition').value = '';
+            document.getElementById('candidateEffectiveness').value = '';
+        }
+
+        function displayCandidates() {
+            const candidatesList = document.getElementById('candidatesList');
+            candidatesList.innerHTML = '';
+
+            candidates.forEach((candidate, index) => {
+                const candidateDiv = document.createElement('div');
+                candidateDiv.className = 'candidate';
+                candidateDiv.innerHTML = `
+                    <div>
+                        <strong>${candidate.name}</strong><br>
+                        Color: <input type="color" value="${candidate.color}" onchange="updateCandidate(${index}, 'color', this.value)">
+                        <div style="display:inline-block; width: 36px; height: 36px; background-color: ${candidate.color}; border: 1px solid #555; border-radius: 4px;"></div><br>
+                        Economic: <input type="number" value="${candidate.economic}" onchange="updateCandidate(${index}, 'economic', this.value)"><br>
+                        Freedom: <input type="number" value="${candidate.freedom}" onchange="updateCandidate(${index}, 'freedom', this.value)"><br>
+                        Social: <input type="number" value="${candidate.social}" onchange="updateCandidate(${index}, 'social', this.value)"><br>
+                        Popularity: <input type="number" value="${candidate.popularity}" onchange="updateCandidate(${index}, 'popularity', this.value)"><br>
+                        Name Recognition: <input type="number" value="${candidate.nameRecognition}" onchange="updateCandidate(${index}, 'nameRecognition', this.value)"><br>
+                        Effectiveness: <input type="number" value="${candidate.effectiveness}" onchange="updateCandidate(${index}, 'effectiveness', this.value)">
+                    </div>
+                    <button onclick="removeCandidate(${index})">Remove</button>
+                `;
+                candidatesList.appendChild(candidateDiv);
+            });
+        }
+
+        function updateCandidate(index, field, value) {
+            candidates[index][field] = field === 'color' ? value : parseInt(value);
+            displayCandidates();
+        }
+
+        function removeCandidate(index) {
+            candidates.splice(index, 1);
+            displayCandidates();
+        }
+
+        function calculateResults() {
+            const economicWeight = parseFloat(document.getElementById('economicWeight').value);
+            const freedomWeight = parseFloat(document.getElementById('freedomWeight').value);
+            const socialWeight = parseFloat(document.getElementById('socialWeight').value);
+
+            const stateEconomic = parseInt(document.getElementById('stateEconomic').value);
+            const stateFreedom = parseInt(document.getElementById('stateFreedom').value);
+            const stateSocial = parseInt(document.getElementById('stateSocial').value);
+
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '';
+
+            // Calculate the maximum possible distance based on weights
+            const maxDistance = 100 * (economicWeight + freedomWeight + socialWeight);
+
+            // Calculate raw scores
+            const results = candidates.map(candidate => {
+                if (isNaN(candidate.economic) || isNaN(candidate.freedom) || isNaN(candidate.social)) {
+                    return { ...candidate, score: 0 }; // Handle missing values
+                }
+
+                // Calculate the weighted distance
+                const distance = (
+                    Math.abs(stateEconomic - candidate.economic) * economicWeight +
+                    Math.abs(stateFreedom - candidate.freedom) * freedomWeight +
+                    Math.abs(stateSocial - candidate.social) * socialWeight
+                );
+
+                // Normalize the distance to a score
+                const normalizedDistance = Math.min(distance / maxDistance, 1); // Ensure it does not exceed 1
+
+                // Compute candidate score, where higher values for popularity, name recognition, and effectiveness improve the score
+                const baseScore = (1 - normalizedDistance); // Inverse of distance normalization
+                const weightedScore = baseScore * ((candidate.popularity + candidate.nameRecognition + candidate.effectiveness) / 300);
+
+                return { ...candidate, score: weightedScore };
+            });
+
+            // Calculate the sum of all scores
+            const totalScore = results.reduce((sum, candidate) => sum + candidate.score, 0);
+
+            // Normalize scores to ensure they add up to 100%
+            results.forEach(candidate => {
+                candidate.score = (candidate.score / totalScore) * 100;
+            });
+
+            // Sort candidates by their score
+            results.sort((a, b) => b.score - a.score);
+
+            // Display the results
+            results.forEach(result => {
+                const resultBar = document.createElement('div');
+                resultBar.className = 'result-bar';
+                resultBar.style.width = `${result.score}%`;
+                resultBar.style.backgroundColor = result.color;
+                resultBar.innerHTML = `${result.name} (${result.score.toFixed(2)}%)`;
+
+                resultsContainer.appendChild(resultBar);
+            });
+        }
+    </script>
+</body>
+</html>
